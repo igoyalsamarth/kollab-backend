@@ -14,10 +14,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
-const basicDetails_1 = require("./scrapingFunctions/basicDetails");
 const loginFunction_1 = require("./scrapingFunctions/loginFunction");
 const puppeteer_extra_1 = __importDefault(require("puppeteer-extra"));
 const puppeteer_extra_plugin_stealth_1 = __importDefault(require("puppeteer-extra-plugin-stealth"));
+const postsScraper_1 = require("./scrapingFunctions/postsScraper");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = process.env.PORT || 3000;
@@ -30,8 +30,9 @@ function fetchAndLogDetails() {
         const browser = yield puppeteer_extra_1.default.launch({ headless: false });
         const page = (yield browser.pages())[0];
         yield (0, loginFunction_1.loginToInstagram)(page, process.env.USER_EMAIL, process.env.USER_PASSWORD);
-        const details = yield (0, basicDetails_1.getBasicDetails)(page, "bhuvan.bam22");
-        console.log(details);
+        //const details = await getBasicDetails(page,"healthkart");
+        //console.log(details);
+        yield (0, postsScraper_1.postsScrapper)(page, "healthkart");
         yield browser.close();
     });
 }

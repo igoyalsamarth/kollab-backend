@@ -4,6 +4,7 @@ import { getBasicDetails } from "./scrapingFunctions/basicDetails";
 import { loginToInstagram } from "./scrapingFunctions/loginFunction";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import {postsScrapper} from "./scrapingFunctions/postsScraper";
 
 dotenv.config();
 
@@ -20,8 +21,9 @@ async function fetchAndLogDetails() {
   const browser = await puppeteer.launch({ headless: false });
   const page = (await browser.pages())[0];
   await loginToInstagram(page,process.env.USER_EMAIL, process.env.USER_PASSWORD);
-  const details = await getBasicDetails(page,"bhuvan.bam22");
-  console.log(details);
+  //const details = await getBasicDetails(page,"healthkart");
+  //console.log(details);
+  await postsScrapper(page,"healthkart")
   await browser.close();
 }
 
