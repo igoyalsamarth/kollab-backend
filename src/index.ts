@@ -1,6 +1,9 @@
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 import { getBasicDetails } from "./scrapingFunctions/basicDetails";
+import { loginToInstagram } from "./scrapingFunctions/loginFunction";
+import puppeteer from "puppeteer-extra";
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 
 dotenv.config();
 
@@ -11,9 +14,15 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Express + TypeScript Server");
 });
 
+
 async function fetchAndLogDetails() {
-  const details = await getBasicDetails("healthkart");
+  puppeteer.use(StealthPlugin());
+  const browser = await puppeteer.launch({ headless: false });
+  const page = (await browser.pages())[0];
+  await loginToInstagram(page,process.env.USER_EMAIL, process.env.USER_PASSWORD);
+  const details = await getBasicDetails(page,"bhuvan.bam22");
   console.log(details);
+  await browser.close();
 }
 
 fetchAndLogDetails();
