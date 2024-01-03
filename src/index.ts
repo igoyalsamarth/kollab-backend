@@ -24,7 +24,7 @@ async function fetchAndLogDetails() {
   //const details = await getBasicDetails(page,"healthkart");
   //console.log(details);
   await postsScrapper(page,"healthkart")
-  await browser.close();
+  //await browser.close();
 }
 
 fetchAndLogDetails();
