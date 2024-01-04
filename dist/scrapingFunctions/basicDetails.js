@@ -46,13 +46,13 @@ function getBasicDetails(page, username) {
                     const span = spans[i];
                     const text = i === 1 ? span.title : span.textContent || '';
                     if (i === 0) {
-                        posts = text;
+                        posts = parseInt(text.replace(/,/g, ''), 10);
                     }
                     else if (i === 1) {
-                        followers = text;
+                        followers = parseInt(text.replace(/,/g, ''), 10);
                     }
                     else if (i === 2) {
-                        following = text;
+                        following = parseInt(text.replace(/,/g, ''), 10);
                     }
                 }
                 return { posts, followers, following };
@@ -129,7 +129,8 @@ function getBasicDetails(page, username) {
         catch (e) {
             links = [];
         }
-        return Object.assign(Object.assign({ instaAccount, accountName }, data), { category, description, links });
+        const emailId = 'samarth.goyal1999@gmail.com';
+        return Object.assign(Object.assign({ instaAccount, accountName }, data), { category, description, links, emailId });
     });
 }
 exports.getBasicDetails = getBasicDetails;

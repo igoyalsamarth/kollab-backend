@@ -5,7 +5,9 @@ import { loginToInstagram } from "./scrapingFunctions/loginFunction";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import {postsScrapper} from "./scrapingFunctions/postsScraper";
+import { PrismaClient } from '@prisma/client';
 
+const prisma = new PrismaClient();
 dotenv.config();
 
 const app: Express = express();
@@ -21,10 +23,25 @@ async function fetchAndLogDetails() {
   const browser = await puppeteer.launch({ headless: false });
   const page = (await browser.pages())[0];
   await loginToInstagram(page,process.env.USER_EMAIL, process.env.USER_PASSWORD);
-  //const details = await getBasicDetails(page,"healthkart");
-  //console.log(details);
-  await postsScrapper(page,"healthkart")
+  const details = await getBasicDetails(page,"healthkart");
+  //await postsScrapper(page,"healthkart")
   //await browser.close();
+
+  const result = await prisma.user.create({
+  data: { 
+    emailId:details.emailId,
+    instaAccount:details.instaAccount,
+    accountName:details.accountName,
+    posts:details.posts,
+    followers:details.followers,
+    following:details.following,
+    description:details.description,
+    link:details.links,
+    category:details.category
+   },
+  });
+
+  console.log(result);
 }
 
 fetchAndLogDetails();
