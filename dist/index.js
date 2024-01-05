@@ -32,7 +32,7 @@ function fetchAndLogDetails() {
         const browser = yield puppeteer_extra_1.default.launch({ headless: false });
         const page = (yield browser.pages())[0];
         yield (0, loginFunction_1.loginToInstagram)(page, process.env.USER_EMAIL, process.env.USER_PASSWORD);
-        const details = yield (0, basicDetails_1.getBasicDetails)(page, "healthkart");
+        const details = yield (0, basicDetails_1.getBasicDetails)(page, "bhuvan.bam22");
         //await postsScrapper(page,"healthkart")
         //await browser.close();
         const result = yield prisma.user.create({

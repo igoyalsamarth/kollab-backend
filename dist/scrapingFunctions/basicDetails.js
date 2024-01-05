@@ -129,7 +129,7 @@ function getBasicDetails(page, username) {
         catch (e) {
             links = [];
         }
-        const emailId = 'samarth.goyal1999@gmail.com';
+        const emailId = 'bhuvanbam22@gmail.com';
         return Object.assign(Object.assign({ instaAccount, accountName }, data), { category, description, links, emailId });
     });
 }

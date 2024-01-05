@@ -1,8 +1,8 @@
-import puppeteer from 'puppeteer-extra';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import { OpenBrowserAndLogin } from "../helpers/openBrowserAndLogin";
 
-export async function getBasicDetails(page: any, username: string|undefined) {
-    puppeteer.use(StealthPlugin());
+export async function getBasicDetails( username: string) {
+    const page = await OpenBrowserAndLogin()
+
     await page.goto(`https://www.instagram.com/${username}/`, { waitUntil: 'networkidle2' });
     //
     let instaAccount: any, accountName: any, data: any, category: any, description: any, links: any
@@ -122,7 +122,6 @@ export async function getBasicDetails(page: any, username: string|undefined) {
         links = [];
     }
 
-    const emailId = 'samarth.goyal1999@gmail.com'
 
-    return { instaAccount, accountName, ...data, category, description, links, emailId };
+    return { instaAccount, accountName, ...data, category, description, links };
 }
