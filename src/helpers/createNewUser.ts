@@ -1,7 +1,8 @@
+import { AccountType } from "@prisma/client";
 import { prisma } from "../db/db";
 import { getBasicDetails } from "../scrapingFunctions/basicDetails";
 
-export async function CreateNewuser(emailId: string, instaAccount: string) {
+export async function CreateNewuser(emailId: string|null, instaAccount: string, accountType: AccountType) {
     const details = await getBasicDetails(instaAccount);
     await prisma.user.create({
         data: {
@@ -13,7 +14,9 @@ export async function CreateNewuser(emailId: string, instaAccount: string) {
             following: details.following,
             description: details.description,
             link: details.links,
-            category: details.category
+            category: details.category,
+            claimed:emailId ? true : false,
+            accountType: accountType, 
         },
     });
 }
