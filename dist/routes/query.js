@@ -47,10 +47,32 @@ query.post('/new_user', (req, res) => __awaiter(void 0, void 0, void 0, function
         yield db_1.prisma.$disconnect();
     }
 }));
-query.get('/get_users', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+query.get('/get_professionals', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         yield db_1.prisma.$connect();
-        const users = yield db_1.prisma.user.findMany();
+        const users = yield db_1.prisma.user.findMany({
+            where: {
+                accountType: "PROFESSIONAL",
+            }
+        });
+        res.json({ status: 200, data: users });
+    }
+    catch (err) {
+        console.log(err);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+    finally {
+        yield db_1.prisma.$disconnect();
+    }
+}));
+query.get('/get_businesses', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield db_1.prisma.$connect();
+        const users = yield db_1.prisma.user.findMany({
+            where: {
+                accountType: "BUSINESS",
+            }
+        });
         res.json({ status: 200, data: users });
     }
     catch (err) {

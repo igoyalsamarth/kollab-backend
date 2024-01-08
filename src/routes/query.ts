@@ -24,7 +24,7 @@ query.post('/new_user', async (req: Request, res: Response) => {
                 claimed: emailId ? true : false,
                 accountType: req.body.accountType,
             },
-        }); res.json({ status: 200, message: "User Created Successfully", data:details })
+        }); res.json({ status: 200, message: "User Created Successfully", data: details })
     } catch (err) {
         console.log(err)
         res.status(500).json({ message: "Internal Server Error" })
@@ -33,10 +33,31 @@ query.post('/new_user', async (req: Request, res: Response) => {
     }
 })
 
-query.get('/get_users', async (req: Request, res: Response) => {
+query.get('/get_professionals', async (req: Request, res: Response) => {
     try {
         await prisma.$connect();
-        const users = await prisma.user.findMany();
+        const users = await prisma.user.findMany({
+            where: {
+                accountType: "PROFESSIONAL",
+            }
+        });
+        res.json({ status: 200, data: users })
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ message: "Internal Server Error" })
+    } finally {
+        await prisma.$disconnect();
+    }
+})
+
+query.get('/get_businesses', async (req: Request, res: Response) => {
+    try {
+        await prisma.$connect();
+        const users = await prisma.user.findMany({
+            where:{
+                accountType: "BUSINESS",
+            }
+        });
         res.json({ status: 200, data: users })
     } catch (err) {
         console.log(err)
