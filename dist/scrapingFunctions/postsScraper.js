@@ -15,37 +15,30 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.postsScrapper = void 0;
 const puppeteer_extra_1 = __importDefault(require("puppeteer-extra"));
 const puppeteer_extra_plugin_stealth_1 = __importDefault(require("puppeteer-extra-plugin-stealth"));
-function postsScrapper(page, username) {
+const openBrowserAndLogin_1 = require("../helpers/openBrowserAndLogin");
+function postsScrapper(username) {
     return __awaiter(this, void 0, void 0, function* () {
         puppeteer_extra_1.default.use((0, puppeteer_extra_plugin_stealth_1.default)());
-        function generatePostSelector(index) {
-            return `div:nth-child(${index}) a`;
+        const page = yield (0, openBrowserAndLogin_1.OpenBrowserAndLogin)();
+        yield page.goto(`https://www.instagram.com/${username}/`, { waitUntil: 'networkidle0' });
+        //const postsSelector = generatePostSelector(1); // Select the first post    
+        //const captionSelector = 'h1._ap3a._aaco._aacu._aacx._aad7._aade'; // Updated selector for the caption
+        //const likesSelector = 'section._ae5m._ae5n._ae5o span.html-span.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x1hl2dhg.x16tdsg8.x1vvkbs'; // Updated selector for the likes
+        const links = yield page.$$eval('a[href^="/p/"]', links => links.map(a => a.getAttribute('href')));
+        console.log(links);
+        //await page.goto(`https://www.instagram.com${links[0]}`, { waitUntil: 'networkidle0' });
+        //const likes = await page.$eval('span.xdj266r', span => span.textContent);
+        const posts = {};
+        for (let link of links) {
+            yield page.goto(`https://www.instagram.com${link}`, { waitUntil: 'networkidle0' });
+            const likes = yield page.$eval('span.xdj266r', span => span.textContent);
+            if (link) {
+                const postId = link.split('/')[2]; // Extract the post ID from the link
+                posts[postId] = { likes: likes };
+            }
         }
-        yield page.goto(`https://www.instagram.com/${username}/`, { waitUntil: 'networkidle2' });
-        const postsSelector = generatePostSelector(1); // Select the first post    
-        const captionSelector = 'h1._ap3a._aaco._aacu._aacx._aad7._aade'; // Updated selector for the caption
-        const likesSelector = 'section._ae5m._ae5n._ae5o span.html-span.xdj266r.x11i5rnm.xat24cr.x1mh8g0r.xexx8yu.x4uap5.x18d9i69.xkhd6sd.x1hl2dhg.x16tdsg8.x1vvkbs'; // Updated selector for the likes
-        try {
-            // Wait for the posts to load
-            yield page.waitForSelector(postsSelector, { timeout: 60000 });
-            console.log('found list of posts');
-            // Get the first post
-            const post = yield page.$(postsSelector);
-            // Click on the post
-            yield post.click();
-            // Wait for the post detail page to load
-            yield page.waitForNavigation({ waitUntil: 'networkidle0' });
-            // Extract the caption and number of likes
-            yield page.waitForSelector(captionSelector, { timeout: 60000 });
-            const caption = yield page.$eval(captionSelector, (el) => el.textContent || '');
-            const likes = yield page.$eval(likesSelector, (el) => el.textContent || '');
-            console.log(`Post 1:`);
-            console.log(`Caption: ${caption}`);
-            console.log(`Likes: ${likes}`);
-        }
-        catch (err) {
-            console.error('Error scraping post:', err);
-        }
+        console.log(posts);
+        // Wait for the posts to load
     });
 }
 exports.postsScrapper = postsScrapper;

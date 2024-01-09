@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const query_1 = __importDefault(require("./routes/query"));
+const postsScraper_1 = require("./scrapingFunctions/postsScraper");
 const cors = require('cors');
 const corsOptions = {
     origin: 'http://localhost:3000',
@@ -22,4 +23,5 @@ app.use(cors(corsOptions));
 app.use('/query', query_1.default);
 app.listen(port, () => {
     console.log(`[server]: Server is running at http://localhost:${port}`);
+    (0, postsScraper_1.postsScrapper)('bhuvan.bam22');
 });
