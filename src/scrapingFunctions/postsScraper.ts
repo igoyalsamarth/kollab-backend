@@ -10,24 +10,26 @@ export async function postsScrapper(username: string) {
     await page.goto(`https://www.instagram.com/${username}/`, { waitUntil: 'networkidle0' });
 
     const links = await page.$$eval('a[href^="/p/"]', links => links.map(a => a.getAttribute('href')));
+    
     console.log(links)
 
+    await page.goto(`https://www.instagram.com/p/C0lNjDjB0bB/`, { waitUntil: 'networkidle0' });
 
-    //await page.goto(`https://www.instagram.com/p/C0lNjDjB0bB/`, { waitUntil: 'networkidle0' });
+    const likes = await page.$eval('span.xdj266r', span => span.textContent);
 
-    //const likes = await page.$eval('span.xdj266r', span => span.textContent);
+    const time = await page.$eval('time._aaqe', time => time.getAttribute('datetime'));
 
-    //const time = await page.$eval('time._aaqe', time => time.getAttribute('datetime'));
+    const hrefs = await page.$$eval('div.xyinxu5 a', (links, username) => links.map((a:any) => a.getAttribute('href').trim().replace(/^\/|\/$/g, '')).filter((href: string) => href !== username), username);
 
-    //const hrefs = await page.$$eval('div.xyinxu5 a', (links, username) => links.map((a:any) => a.getAttribute('href').trim().replace(/^\/|\/$/g, '')).filter((href: string) => href !== username), username);
 
-    const posts: any = {};
+    console.log(likes)
+    console.log(time)
+    console.log(hrefs)
 
-    //console.log(likes)
-    //console.log(time)
-    //console.log(hrefs)
+    //const posts: any = {};
 
-    for (let link of links) {
+
+    {/*for (let link of links) {
         await page.goto(`https://www.instagram.com${link}`, { waitUntil: 'networkidle0' });
         const likes = await page.$eval('span.xdj266r', span => span.textContent);
         const time = await page.$eval('time._aaqe', time => time.getAttribute('datetime'));
@@ -50,9 +52,8 @@ export async function postsScrapper(username: string) {
 
             posts[postId] = { likes: likes, time: time, brands: brands, locations: locations };
         }
-    }
+    }*/}
 
-    console.log(posts)
     // Wait for the posts to load
 
 }

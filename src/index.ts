@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import query from './routes/query'
 import { OpenBrowserAndLogin } from "./helpers/openBrowserAndLogin";
 import { postsScrapper } from "./scrapingFunctions/postsScraper";
+import { reelsScrapper } from "./scrapingFunctions/reelsScrapper";
+
 const cors = require('cors')
 const corsOptions ={
   origin:'http://localhost:3000', 
@@ -25,5 +27,5 @@ app.use(cors(corsOptions));
 app.use('/query', query)
 app.listen(port, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);
-  postsScrapper('bhuvan.bam22')
+  reelsScrapper('bhuvan.bam22')
 });
