@@ -19,7 +19,7 @@ const puppeteer_extra_plugin_stealth_1 = __importDefault(require("puppeteer-extr
 function OpenBrowserAndLogin() {
     return __awaiter(this, void 0, void 0, function* () {
         puppeteer_extra_1.default.use((0, puppeteer_extra_plugin_stealth_1.default)());
-        const browser = yield puppeteer_extra_1.default.launch({ headless: false });
+        const browser = yield puppeteer_extra_1.default.launch({ headless: true });
         const page = (yield browser.pages())[0];
         yield (0, loginFunction_1.loginToInstagram)(page, process.env.USER_EMAIL, process.env.USER_PASSWORD);
         return page;

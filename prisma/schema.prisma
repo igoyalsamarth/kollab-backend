@@ -16,18 +16,48 @@ enum AccountType {
 }
 
 model User {
-  id           String      @id @default(cuid())
-  emailId      String?     @unique
-  instaAccount String      @unique
-  accountName  String
-  claimed      Boolean     @default(false)
-  accountType  AccountType @default(BUSINESS)
-  posts        Int
-  followers    Int
-  following    Int
-  category     String
-  description  String
-  link         Json
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id                 String               @id @default(cuid())
+  emailId            String?              @unique
+  instaAccount       String               @unique
+  accountName        String?
+  claimed            Boolean              @default(false)
+  accountType        AccountType          @default(BUSINESS)
+  posts              Int?
+  followers          Int?
+  following          Int?
+  category           String?
+  description        String?
+  link               Json?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  staticPostsDetails StaticPostsDetails[]
+  reelPostsDetails   ReelPostsDetails[]
+}
+
+model StaticPostsDetails {
+  id                 String               @id
+  user               User?                @relation(fields: [instaAccount], references: [instaAccount])
+  instaAccount       String               // This will be used to connect with the User table
+  likes              Int?
+  postedAt           DateTime?
+  brands             Json?
+  locations          Json?
+  audio              Json?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+}
+
+model ReelPostsDetails {
+  id                 String               @id
+  user               User?                @relation(fields: [instaAccount], references: [instaAccount])
+  instaAccount       String               // This will be used to connect with the User table 
+  likes              Int?
+  comments           Int?
+  views              Int?
+  postedAt           DateTime?
+  brands             Json?
+  locations          Json?
+  audio              Json?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
 }

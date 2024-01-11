@@ -3,6 +3,21 @@ import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { OpenBrowserAndLogin } from "../helpers/openBrowserAndLogin";
 
 export async function reelsScrapper(username: string) {
+
+    function convertKMB(likes: string | null): number | null {
+        if (!likes) { return null }
+        likes = likes.replace(/,/g, ''); // remove commas
+        if (likes.endsWith('B')) {
+            return parseFloat(likes.replace('B', '')) * 1000000000;
+        } else if (likes.endsWith('M')) {
+            return parseFloat(likes.replace('M', '')) * 1000000;
+        } else if (likes.endsWith('K')) {
+            return parseFloat(likes.replace('K', '')) * 1000;
+        } else {
+            return parseFloat(likes);
+        }
+    }
+
     puppeteer.use(StealthPlugin());
 
     const page = await OpenBrowserAndLogin()
@@ -20,20 +35,23 @@ export async function reelsScrapper(username: string) {
 
     const views = await page.$$eval('div._aaj_ span.xdj266r', spans => spans.map(span => span.textContent));
 
-    let result: any = {};
+    let result: any[] = [];
+
     for (let i = 0; i < links.length; i++) {
         const id: any = links[i]?.split('/')[2]; // Add null check before accessing the array element
-        result[id] = {
-            likes: posts[i].likes,
-            comments: posts[i].comments,
-            views: views[i]
-        };
+        result.push({
+            id: id,
+            likes: convertKMB(posts[i].likes),
+            comments: convertKMB(posts[i].comments),
+            views: convertKMB(views[i])
+        });
     }
 
-
     for (let link of links) {
-        await page.goto(`https://www.instagram.com${link}`, { waitUntil: 'networkidle0' });
+        await page.goto(`https://www.instagram.com${link}`, { waitUntil: 'domcontentloaded' });
+        await page.waitForSelector('time._aaqe');
         const time = await page.$eval('time._aaqe', time => time.getAttribute('datetime'));
+        await page.waitForSelector('div.xyinxu5 a');
         const hrefs = await page.$$eval('div.xyinxu5 a', (links, username) => links.map((a: any) => a.getAttribute('href').trim().replace(/^\/|\/$/g, ''))
             .filter((href: string) => href !== username), username);
 
@@ -57,16 +75,18 @@ export async function reelsScrapper(username: string) {
         if (link) {
             const postId = link.split('/')[2]; // Extract the post ID from the link
 
-            // Update the result object with the time, brands, and locations
-            result[postId] = {
-                ...result[postId],
-                time: time,
-                brands: brands,
-                locations: locations,
-                audio: audio
-            };
+            // Find the post in the result array and update it
+            const postIndex = result.findIndex(post => post.id === postId);
+            if (postIndex !== -1) {
+                result[postIndex] = {
+                    ...result[postIndex],
+                    time: time,
+                    brands: brands.length > 0 ? brands : null,
+                    locations: locations.length > 0 ? locations : null,
+                    audio: audio.length > 0 ? audio : null
+                };
+            }
         }
     }
-
-    console.log(result);
+    return result;
 }

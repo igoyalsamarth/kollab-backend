@@ -22,41 +22,55 @@ function postsScrapper(username) {
         const page = yield (0, openBrowserAndLogin_1.OpenBrowserAndLogin)();
         yield page.goto(`https://www.instagram.com/${username}/`, { waitUntil: 'networkidle0' });
         const links = yield page.$$eval('a[href^="/p/"]', links => links.map(a => a.getAttribute('href')));
-        console.log(links);
-        yield page.goto(`https://www.instagram.com/p/C0lNjDjB0bB/`, { waitUntil: 'networkidle0' });
-        const likes = yield page.$eval('span.xdj266r', span => span.textContent);
-        const time = yield page.$eval('time._aaqe', time => time.getAttribute('datetime'));
-        const hrefs = yield page.$$eval('div.xyinxu5 a', (links, username) => links.map((a) => a.getAttribute('href').trim().replace(/^\/|\/$/g, '')).filter((href) => href !== username), username);
-        console.log(likes);
-        console.log(time);
-        console.log(hrefs);
-        //const posts: any = {};
-        { /*for (let link of links) {
-            await page.goto(`https://www.instagram.com${link}`, { waitUntil: 'networkidle0' });
-            const likes = await page.$eval('span.xdj266r', span => span.textContent);
-            const time = await page.$eval('time._aaqe', time => time.getAttribute('datetime'));
-            const hrefs = await page.$$eval('div.xyinxu5 a', (links, username) => links.map((a: any) => a.getAttribute('href').trim().replace(/^\/|\/$/g, ''))
-                .filter((href: string) => href !== username), username);
-    
-            const { locations, brands } = hrefs.reduce((acc, href) => {
+        //console.log(links)
+        //await page.goto(`https://www.instagram.com/p/C0lNjDjB0bB/`, { waitUntil: 'networkidle0' });
+        //const likes = await page.$eval('span.xdj266r', span => span.textContent);
+        //const time = await page.$eval('time._aaqe', time => time.getAttribute('datetime'));
+        //const hrefs = await page.$$eval('div.xyinxu5 a', (links, username) => links.map((a:any) => a.getAttribute('href').trim().replace(/^\/|\/$/g, '')).filter((href: string) => href !== username), username);
+        //console.log(likes)
+        //console.log(time)
+        //console.log(hrefs)
+        const posts = [];
+        for (let link of links) {
+            yield page.goto(`https://www.instagram.com${link}`, { waitUntil: 'domcontentloaded' });
+            yield page.waitForSelector('span.xdj266r');
+            const likes = yield page.$eval('span.xdj266r', span => span.textContent);
+            yield page.waitForSelector('time._aaqe');
+            const time = yield page.$eval('time._aaqe', time => time.getAttribute('datetime'));
+            yield page.waitForSelector('div.xyinxu5 a');
+            const hrefs = yield page.$$eval('div.xyinxu5 a', (links, username) => links.map((a) => a.getAttribute('href').trim().replace(/^\/|\/$/g, ''))
+                .filter((href) => href !== username), username);
+            const { locations, brands, audio } = hrefs.reduce((acc, href) => {
                 if (href.includes('location')) {
                     const locationParts = href.split('/');
                     const locationName = locationParts.pop();
                     acc.locations.push(locationName);
-                } else {
-                    acc.brands.push(href);
+                }
+                else if (href.includes('audio')) {
+                    const audioParts = href.split('/');
+                    const audioNumber = audioParts.pop();
+                    acc.audio.push(audioNumber);
+                }
+                else {
+                    if (!acc.brands.includes(href)) {
+                        acc.brands.push(href);
+                    }
                 }
                 return acc;
-            }, { locations: [], brands: [] });
-    
+            }, { locations: [], brands: [], audio: [] });
             if (link) {
                 const postId = link.split('/')[2]; // Extract the post ID from the link
-    
-                posts[postId] = { likes: likes, time: time, brands: brands, locations: locations };
+                posts.push({
+                    id: postId,
+                    likes: likes ? parseInt(likes.replace(/,/g, '')) : 0,
+                    time: time,
+                    brands: brands.length > 0 ? brands : null,
+                    locations: locations.length > 0 ? locations : null,
+                    audio: audio.length > 0 ? audio : null
+                });
             }
-        }*/
         }
-        // Wait for the posts to load
+        return posts;
     });
 }
 exports.postsScrapper = postsScrapper;

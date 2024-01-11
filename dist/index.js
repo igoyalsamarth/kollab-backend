@@ -6,11 +6,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const query_1 = __importDefault(require("./routes/query"));
-const reelsScrapper_1 = require("./scrapingFunctions/reelsScrapper");
+const posts_1 = __importDefault(require("./routes/posts"));
 const cors = require('cors');
 const corsOptions = {
     origin: 'http://localhost:3000',
-    credentials: true, //access-control-allow-credentials:true
+    credentials: true,
     optionSuccessStatus: 200
 };
 dotenv_1.default.config();
@@ -21,7 +21,7 @@ app.get("/", (req, res) => {
 });
 app.use(cors(corsOptions));
 app.use('/query', query_1.default);
+app.use('/posts', posts_1.default);
 app.listen(port, () => {
     console.log(`[server]: Server is running at http://localhost:${port}`);
-    (0, reelsScrapper_1.reelsScrapper)('bhuvan.bam22');
 });
