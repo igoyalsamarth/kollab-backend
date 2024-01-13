@@ -20,6 +20,7 @@ model User {
   emailId            String?              @unique
   instaAccount       String               @unique
   accountName        String?
+  imgSource          String?
   claimed            Boolean              @default(false)
   accountType        AccountType          @default(BUSINESS)
   posts              Int?
@@ -35,29 +36,31 @@ model User {
 }
 
 model StaticPostsDetails {
-  id                 String               @id
-  user               User?                @relation(fields: [instaAccount], references: [instaAccount])
-  instaAccount       String               // This will be used to connect with the User table
-  likes              Int?
-  postedAt           DateTime?
-  brands             Json?
-  locations          Json?
-  audio              Json?
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
+  id           String    @id
+  user         User?     @relation(fields: [instaAccount], references: [instaAccount])
+  instaAccount String // This will be used to connect with the User table
+  imgSource    String?
+  likes        Int?
+  postedAt     DateTime?
+  brands       Json?
+  locations    Json?
+  audio        Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model ReelPostsDetails {
-  id                 String               @id
-  user               User?                @relation(fields: [instaAccount], references: [instaAccount])
-  instaAccount       String               // This will be used to connect with the User table 
-  likes              Int?
-  comments           Int?
-  views              Int?
-  postedAt           DateTime?
-  brands             Json?
-  locations          Json?
-  audio              Json?
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
+  id           String    @id
+  user         User?     @relation(fields: [instaAccount], references: [instaAccount])
+  instaAccount String // This will be used to connect with the User table 
+  imgSource    String?
+  likes        Int?
+  comments     Int?
+  views        Int?
+  postedAt     DateTime?
+  brands       Json?
+  locations    Json?
+  audio        Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }

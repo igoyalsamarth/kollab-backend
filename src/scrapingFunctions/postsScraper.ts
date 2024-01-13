@@ -1,6 +1,7 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { OpenBrowserAndLogin } from "../helpers/openBrowserAndLogin";
+import { scrollToTheEnd } from "./scrollToTheEnd";
 
 export async function postsScrapper(username: string) {
     puppeteer.use(StealthPlugin());
@@ -9,7 +10,18 @@ export async function postsScrapper(username: string) {
 
     await page.goto(`https://www.instagram.com/${username}/`, { waitUntil: 'networkidle0' });
 
-    const links = await page.$$eval('a[href^="/p/"]', links => links.map(a => a.getAttribute('href')));
+    await scrollToTheEnd(username, page)
+
+    const linksAndImgSrcs = await page.$$eval('a[href^="/p/"]', links => links.map(a => {
+        const img = a.querySelector('img');
+        const imgSrc = img ? img.getAttribute('src') : null;
+        return {
+            link: a.getAttribute('href'),
+            imgSrc
+        };
+    }));
+
+    console.log(linksAndImgSrcs)
     
     //console.log(links)
 
@@ -21,15 +33,13 @@ export async function postsScrapper(username: string) {
 
     //const hrefs = await page.$$eval('div.xyinxu5 a', (links, username) => links.map((a:any) => a.getAttribute('href').trim().replace(/^\/|\/$/g, '')).filter((href: string) => href !== username), username);
 
-
     //console.log(likes)
     //console.log(time)
     //console.log(hrefs)
 
     const posts: any = [];
 
-
-    for (let link of links) {
+    for (let { link, imgSrc } of linksAndImgSrcs) {
         await page.goto(`https://www.instagram.com${link}`, { waitUntil: 'domcontentloaded' });
         await page.waitForSelector('span.xdj266r');
         const likes = await page.$eval('span.xdj266r', span => span.textContent);
@@ -38,7 +48,7 @@ export async function postsScrapper(username: string) {
         await page.waitForSelector('div.xyinxu5 a');
         const hrefs = await page.$$eval('div.xyinxu5 a', (links, username) => links.map((a: any) => a.getAttribute('href').trim().replace(/^\/|\/$/g, ''))
             .filter((href: string) => href !== username), username);
-
+    
             const { locations, brands, audio } = hrefs.reduce((acc, href) => {
                 if (href.includes('location')) {
                     const locationParts = href.split('/');
@@ -61,6 +71,7 @@ export async function postsScrapper(username: string) {
 
             posts.push({ 
                 id: postId, 
+                imgSrc, // Add the imgSrc to the post object
                 likes: likes ? parseInt(likes.replace(/,/g, '')) : 0, 
                 time: time, 
                 brands: brands.length > 0 ? brands : null, 

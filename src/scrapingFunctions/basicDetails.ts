@@ -5,13 +5,27 @@ export async function getBasicDetails( username: string) {
 
     await page.goto(`https://www.instagram.com/${username}/`, { waitUntil: 'networkidle2' });
     //
-    let instaAccount: any, accountName: any, data: any, category: any, description: any, links: any
+    let instaAccount: any, accountName: any, data: any, category: any, description: any, links: any, imgSrc:any
     // Wait for the page name element to load
     try {
         await page.waitForSelector('h2', { timeout: 60000 });
         instaAccount = await page.$eval('h2', (h2: any) => h2.textContent || '');
     } catch (e) {
         instaAccount = null;
+    }
+    try {
+        await page.waitForSelector('img', { timeout: 60000 });
+        imgSrc = await page.$$eval('img', (imgs, username) => {
+            for (let img of imgs) {
+                if (img.alt.includes(username)) {
+                    return img.getAttribute('src');
+                }
+            }
+            return null;
+        }, username);
+    
+    } catch (e) {
+        console.log('Image not found');
     }
     // Fetch accountName
     try {
@@ -123,5 +137,5 @@ export async function getBasicDetails( username: string) {
     }
 
 
-    return { instaAccount, accountName, ...data, category, description, links };
+    return { instaAccount, imgSrc, accountName, ...data, category, description, links };
 }

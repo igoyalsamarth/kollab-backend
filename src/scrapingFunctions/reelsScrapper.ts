@@ -1,6 +1,7 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { OpenBrowserAndLogin } from "../helpers/openBrowserAndLogin";
+import { scrollToTheEnd } from "./scrollToTheEnd";
 
 export async function reelsScrapper(username: string) {
 
@@ -24,7 +25,17 @@ export async function reelsScrapper(username: string) {
 
     await page.goto(`https://www.instagram.com/${username}/reels`, { waitUntil: 'networkidle0' });
 
-    const links = await page.$$eval('a[href^="/reel/"]', links => links.map(a => a.getAttribute('href')));
+    await scrollToTheEnd(username,page)
+
+    const linksAndBgImages = await page.$$eval('a[href^="/reel/"]', links => links.map(a => {
+        const div = a.querySelector('div._aag6');
+        const style = div ? div.getAttribute('style') : null;
+        const bgImage = style ? style.match(/url\("(.*)"\)/)?.[1] : null; // Add null check before accessing the array element
+        return {
+            link: a.getAttribute('href'),
+            bgImage
+        };
+    }));
 
     const posts = await page.$$eval('div._aaj-', posts => posts.map(post => {
         const stats = Array.from(post.querySelectorAll('ul._abpo li span.xdj266r')).map(li => li.textContent);
@@ -37,17 +48,19 @@ export async function reelsScrapper(username: string) {
 
     let result: any[] = [];
 
-    for (let i = 0; i < links.length; i++) {
-        const id: any = links[i]?.split('/')[2]; // Add null check before accessing the array element
+    for (let i = 0; i < linksAndBgImages.length; i++) {
+        const { link, bgImage } = linksAndBgImages[i];
+        const id: any = link?.split('/')[2]; // Add null check before accessing the array element
         result.push({
             id: id,
+            bgImage,
             likes: convertKMB(posts[i].likes),
             comments: convertKMB(posts[i].comments),
             views: convertKMB(views[i])
         });
     }
 
-    for (let link of links) {
+    for (let { link, bgImage } of linksAndBgImages) {
         await page.goto(`https://www.instagram.com${link}`, { waitUntil: 'domcontentloaded' });
         await page.waitForSelector('time._aaqe');
         const time = await page.$eval('time._aaqe', time => time.getAttribute('datetime'));
@@ -80,6 +93,7 @@ export async function reelsScrapper(username: string) {
             if (postIndex !== -1) {
                 result[postIndex] = {
                     ...result[postIndex],
+                    bgImage,
                     time: time,
                     brands: brands.length > 0 ? brands : null,
                     locations: locations.length > 0 ? locations : null,
