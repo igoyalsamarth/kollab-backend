@@ -14,7 +14,7 @@ posts.post('/populate_static_posts', async (req: Request, res: Response) => {
             data: {
                 id: post.id,
                 instaAccount: req.body.instaAccount,
-                imgSource:post.post.imgSrc,
+                imgSource:post.imgSrc,
                 likes: post.likes,
                 postedAt: post.time,
                 brands: post.brands,

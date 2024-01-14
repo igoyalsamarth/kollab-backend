@@ -20,8 +20,6 @@ export async function postsScrapper(username: string) {
             imgSrc
         };
     }));
-
-    console.log(linksAndImgSrcs)
     
     //console.log(links)
 
@@ -80,5 +78,6 @@ export async function postsScrapper(username: string) {
             });
         }
     }
+    console.log(posts)
     return posts;
 }
