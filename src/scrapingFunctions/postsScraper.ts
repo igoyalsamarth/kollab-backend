@@ -2,6 +2,7 @@ import puppeteer from "puppeteer-extra";
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { OpenBrowserAndLogin } from "../helpers/openBrowserAndLogin";
 import { scrollToTheEnd } from "./scrollToTheEnd";
+import axios from 'axios'
 
 export async function postsScrapper(username: string) {
     puppeteer.use(StealthPlugin());
@@ -10,16 +11,26 @@ export async function postsScrapper(username: string) {
 
     await page.goto(`https://www.instagram.com/${username}/`, { waitUntil: 'networkidle0' });
 
-    await scrollToTheEnd(username, page)
+    await scrollToTheEnd(page)
 
-    const linksAndImgSrcs = await page.$$eval('a[href^="/p/"]', links => links.map(a => {
-        const img = a.querySelector('img');
-        const imgSrc = img ? img.getAttribute('src') : null;
-        return {
-            link: a.getAttribute('href'),
-            imgSrc
-        };
-    }));
+    const linksAndImgSrcs:any = await page.$$eval('a[href^="/p/"]', (links) => {
+        return links.map((a) => {
+            const img = a.querySelector('img');
+            const imgSrc = img ? img.getAttribute('src') : null;
+            return {
+                link: a.getAttribute('href'),
+                imgSrc
+            };
+        });
+    });
+
+    for (let item of linksAndImgSrcs) {
+        if (item.imgSrc) {
+            const response = await axios.get(item.imgSrc, { responseType: 'arraybuffer' });
+            item.byteaImage = Buffer.from(response.data, 'binary');
+            delete item.imgSrc;
+        }
+    }
     
     //console.log(links)
 
@@ -37,7 +48,7 @@ export async function postsScrapper(username: string) {
 
     const posts: any = [];
 
-    for (let { link, imgSrc } of linksAndImgSrcs) {
+    for (let { link, byteaImage } of linksAndImgSrcs) {
         await page.goto(`https://www.instagram.com${link}`, { waitUntil: 'domcontentloaded' });
         await page.waitForSelector('span.xdj266r');
         const likes = await page.$eval('span.xdj266r', span => span.textContent);
@@ -69,7 +80,7 @@ export async function postsScrapper(username: string) {
 
             posts.push({ 
                 id: postId, 
-                imgSrc, // Add the imgSrc to the post object
+                byteaImage, // Add the imgSrc to the post object
                 likes: likes ? parseInt(likes.replace(/,/g, '')) : 0, 
                 time: time, 
                 brands: brands.length > 0 ? brands : null, 
@@ -78,6 +89,5 @@ export async function postsScrapper(username: string) {
             });
         }
     }
-    console.log(posts)
     return posts;
 }

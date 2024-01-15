@@ -1,4 +1,4 @@
-export async function scrollToTheEnd(username: string, page:any) {
+export async function scrollToTheEnd(page:any) {
 
     let previousHeight;
     let loadingIndicatorExists = true;

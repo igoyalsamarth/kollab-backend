@@ -14,7 +14,7 @@ posts.post('/populate_static_posts', async (req: Request, res: Response) => {
             data: {
                 id: post.id,
                 instaAccount: req.body.instaAccount,
-                imgSource:post.imgSrc,
+                imgSource:post.byteaImage,
                 likes: post.likes,
                 postedAt: post.time,
                 brands: post.brands,
@@ -40,7 +40,7 @@ posts.post('/populate_reels', async (req: Request, res: Response) => {
             data: {
                 id: post.id,
                 instaAccount: req.body.instaAccount,
-                imgSource:post.bgImage,
+                imgSource:post.byteaImage,
                 likes: post.likes,
                 comments: post.comments,
                 views: post.views,

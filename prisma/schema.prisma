@@ -20,7 +20,7 @@ model User {
   emailId            String?              @unique
   instaAccount       String               @unique
   accountName        String?
-  imgSource          String?
+  imgSource          Bytes?
   claimed            Boolean              @default(false)
   accountType        AccountType          @default(BUSINESS)
   posts              Int?
@@ -39,7 +39,7 @@ model StaticPostsDetails {
   id           String    @id
   user         User?     @relation(fields: [instaAccount], references: [instaAccount])
   instaAccount String // This will be used to connect with the User table
-  imgSource    String?
+  imgSource    Bytes?
   likes        Int?
   postedAt     DateTime?
   brands       Json?
@@ -53,7 +53,7 @@ model ReelPostsDetails {
   id           String    @id
   user         User?     @relation(fields: [instaAccount], references: [instaAccount])
   instaAccount String // This will be used to connect with the User table 
-  imgSource    String?
+  imgSource    Bytes?
   likes        Int?
   comments     Int?
   views        Int?

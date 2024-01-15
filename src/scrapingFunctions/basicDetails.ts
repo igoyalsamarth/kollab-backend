@@ -1,11 +1,12 @@
 import { OpenBrowserAndLogin } from "../helpers/openBrowserAndLogin";
+import axios from 'axios';
 
-export async function getBasicDetails( username: string) {
+export async function getBasicDetails(username: string) {
     const page = await OpenBrowserAndLogin()
 
     await page.goto(`https://www.instagram.com/${username}/`, { waitUntil: 'networkidle2' });
     //
-    let instaAccount: any, accountName: any, data: any, category: any, description: any, links: any, imgSrc:any
+    let instaAccount: any, accountName: any, data: any, category: any, description: any, links: any, imgSrc: any, byteaImage: any
     // Wait for the page name element to load
     try {
         await page.waitForSelector('h2', { timeout: 60000 });
@@ -13,9 +14,10 @@ export async function getBasicDetails( username: string) {
     } catch (e) {
         instaAccount = null;
     }
+
     try {
         await page.waitForSelector('img', { timeout: 60000 });
-        imgSrc = await page.$$eval('img', (imgs, username) => {
+        const imgSrc = await page.$$eval('img', (imgs, username) => {
             for (let img of imgs) {
                 if (img.alt.includes(username)) {
                     return img.getAttribute('src');
@@ -23,7 +25,12 @@ export async function getBasicDetails( username: string) {
             }
             return null;
         }, username);
-    
+
+        if (imgSrc) {
+            const response = await axios.get(imgSrc, { responseType: 'arraybuffer' });
+            byteaImage = Buffer.from(response.data, 'binary');
+            // Now you can store byteaImage in your database
+        }
     } catch (e) {
         console.log('Image not found');
     }
@@ -46,11 +53,11 @@ export async function getBasicDetails( username: string) {
                 const text = i === 1 ? span.title : span.textContent || '';
 
                 if (i === 0) {
-                    posts = parseInt(text.replace(/,/g, ''),10);
+                    posts = parseInt(text.replace(/,/g, ''), 10);
                 } else if (i === 1) {
-                    followers = parseInt(text.replace(/,/g, ''),10);
+                    followers = parseInt(text.replace(/,/g, ''), 10);
                 } else if (i === 2) {
-                    following = parseInt(text.replace(/,/g, ''),10);
+                    following = parseInt(text.replace(/,/g, ''), 10);
                 }
             }
 
@@ -128,7 +135,7 @@ export async function getBasicDetails( username: string) {
             }
         } else if (divText?.length > 0) {
             // Remove "Link" text and spaces from divText
-            links = [{ context: 'url', urlLink: divText}];
+            links = [{ context: 'url', urlLink: divText }];
         } else {
             links = [];
         }
@@ -136,6 +143,5 @@ export async function getBasicDetails( username: string) {
         links = [];
     }
 
-
-    return { instaAccount, imgSrc, accountName, ...data, category, description, links };
+    return { instaAccount, byteaImage, accountName, ...data, category, description, links };
 }

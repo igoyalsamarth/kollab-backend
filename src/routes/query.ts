@@ -15,7 +15,7 @@ query.post('/new_user', async (req: Request, res: Response) => {
                 emailId: emailId,
                 instaAccount: details.instaAccount,
                 accountName: details.accountName,
-                imgSource:details.imgSrc,
+                imgSource:details.byteaImage,
                 posts: details.posts,
                 followers: details.followers,
                 following: details.following,
