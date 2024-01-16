@@ -10,19 +10,47 @@ export async function postsScrapper(username: string) {
     const page = await OpenBrowserAndLogin()
 
     await page.goto(`https://www.instagram.com/${username}/`, { waitUntil: 'networkidle0' });
+    let previousHeight;
+    let loadingIndicatorExists = true;
+    let linksAndImgSrcs:any = [];
 
-    await scrollToTheEnd(page)
+    while (loadingIndicatorExists) {
+        previousHeight = await page.evaluate('document.body.scrollHeight');
+        await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
+        await new Promise(r => setTimeout(r, 2000)); // Adjust this timeout as needed
 
-    const linksAndImgSrcs:any = await page.$$eval('a[href^="/p/"]', (links) => {
-        return links.map((a) => {
-            const img = a.querySelector('img');
-            const imgSrc = img ? img.getAttribute('src') : null;
-            return {
-                link: a.getAttribute('href'),
-                imgSrc
-            };
+        // Fetch data
+
+        const newLinksAndImgSrcs:any = await page.$$eval('a[href^="/p/"]', (links) => {
+            return links.map((a) => {
+                const img = a.querySelector('img');
+                const imgSrc = img ? img.getAttribute('src') : null;
+                return {
+                    link: a.getAttribute('href'),
+                    imgSrc
+                };
+            });
         });
-    });
+        
+        const uniqueNewLinksAndImgSrcs = newLinksAndImgSrcs.filter((newItem:any) => 
+            !linksAndImgSrcs.some((existingItem:any) => existingItem.link === newItem.link)
+        );
+        
+        linksAndImgSrcs = [...linksAndImgSrcs, ...uniqueNewLinksAndImgSrcs];
+          
+        let newHeight = await page.evaluate('document.body.scrollHeight');
+        if (newHeight === previousHeight) {
+            loadingIndicatorExists = false;
+            console.log('Reached the end of the page');
+        } else {
+            try {
+                await page.waitForFunction(`document.body.scrollHeight > ${previousHeight}`, { timeout: 5000 });
+            } catch (error) {
+                loadingIndicatorExists = false;
+                console.log('Scroll height did not increase within 5 seconds');
+            }
+        }
+    }
 
     for (let item of linksAndImgSrcs) {
         if (item.imgSrc) {

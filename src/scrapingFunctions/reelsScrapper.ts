@@ -26,17 +26,45 @@ export async function reelsScrapper(username: string) {
 
     await page.goto(`https://www.instagram.com/${username}/reels`, { waitUntil: 'networkidle0' });
 
-    await scrollToTheEnd(page)
+    let previousHeight;
+    let loadingIndicatorExists = true;
+    let linksAndBgImages: any[] = [];
 
-    const linksAndBgImages:any = await page.$$eval('a[href^="/reel/"]', links => links.map(a => {
-        const div = a.querySelector('div._aag6');
-        const style = div ? div.getAttribute('style') : null;
-        const bgImage = style ? style.match(/url\("(.*)"\)/)?.[1] : null; // Add null check before accessing the array element
-        return {
-            link: a.getAttribute('href'),
-            bgImage
-        };
-    }));
+    while (loadingIndicatorExists) {
+        previousHeight = await page.evaluate('document.body.scrollHeight');
+        await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
+        await new Promise(r => setTimeout(r, 2000)); // Adjust this timeout as needed
+
+        // Fetch data
+        const newLinksAndBgImages: any = await page.$$eval('a[href^="/reel/"]', links => links.map(a => {
+            const div = a.querySelector('div._aag6');
+            const style = div ? div.getAttribute('style') : null;
+            const bgImage = style ? style.match(/url\("(.*)"\)/)?.[1] : null; // Add null check before accessing the array element
+            return {
+                link: a.getAttribute('href'),
+                bgImage
+            };
+        }));
+
+        const uniqueNewLinksAndBgImages = newLinksAndBgImages.filter((newItem:any) => !linksAndBgImages.some(existingItem => existingItem.link === newItem.link));
+        
+        linksAndBgImages = [...linksAndBgImages, ...uniqueNewLinksAndBgImages];
+        
+        let newHeight = await page.evaluate('document.body.scrollHeight');
+        if (newHeight === previousHeight) {
+            loadingIndicatorExists = false;
+            console.log('Reached the end of the page');
+        } else {
+            try {
+                await page.waitForFunction(`document.body.scrollHeight > ${previousHeight}`, { timeout: 5000 });
+            } catch (error) {
+                loadingIndicatorExists = false;
+                console.log('Scroll height did not increase within 5 seconds');
+            }
+        }
+    }
+
+    console.log(linksAndBgImages.length)
 
     for (let item of linksAndBgImages) {
         if (item.bgImage) {
@@ -48,8 +76,8 @@ export async function reelsScrapper(username: string) {
 
     const posts = await page.$$eval('div._aaj-', posts => posts.map(post => {
         const stats = Array.from(post.querySelectorAll('ul._abpo li span.xdj266r')).map(li => li.textContent);
-        const likes = stats[0];
-        const comments = stats[1];
+        const likes = stats.length > 0 ? stats[0] : null;
+        const comments = stats.length > 1 ? stats[1] : null;
         return { likes, comments };
     }));
 
@@ -63,9 +91,9 @@ export async function reelsScrapper(username: string) {
         result.push({
             id: id,
             byteaImage,
-            likes: convertKMB(posts[i].likes),
-            comments: convertKMB(posts[i].comments),
-            views: convertKMB(views[i])
+            likes: posts[i] ? convertKMB(posts[i].likes) : null,
+            comments: posts[i] ? convertKMB(posts[i].comments) : null,
+            views: posts[i] ? convertKMB(views[i]) : null
         });
     }
 
