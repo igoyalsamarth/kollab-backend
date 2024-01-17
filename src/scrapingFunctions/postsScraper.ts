@@ -26,7 +26,7 @@ export async function postsScrapper(username: string) {
         const newLinksAndImgSrcs: any = await page.$$eval('a[href^="/p/"]', (links, postCount) => {
             return links.map((a) => {
                 const img = a.querySelector('img');
-                const imgSrc = postCount < 6 && img ? img.getAttribute('src') : null; // Set imgSrc to null after 6 posts
+                const imgSrc = postCount < 7 && img ? img.getAttribute('src') : null; // Set imgSrc to null after 6 posts
                 postCount++; // Increment the post count
                 return {
                     link: a.getAttribute('href'),

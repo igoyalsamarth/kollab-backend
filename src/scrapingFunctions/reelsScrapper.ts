@@ -41,7 +41,7 @@ export async function reelsScrapper(username: string) {
         const newLinksAndBgImages: any = await page.$$eval('a[href^="/reel/"]', (links, postCount) => links.map((a, index) => {
             const div = a.querySelector('div._aag6');
             const style = div ? div.getAttribute('style') : null;
-            const bgImage = index < 8 && style ? style.match(/url\("(.*)"\)/)?.[1] : null; // Set bgImage to null after 8 posts
+            const bgImage = index < 9 && style ? style.match(/url\("(.*)"\)/)?.[1] : null; // Set bgImage to null after 8 posts
             return {
                 link: a.getAttribute('href'),
                 bgImage
