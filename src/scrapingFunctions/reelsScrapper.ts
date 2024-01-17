@@ -30,26 +30,29 @@ export async function reelsScrapper(username: string) {
     let loadingIndicatorExists = true;
     let linksAndBgImages: any[] = [];
 
+    let postCount = 0;
+
     while (loadingIndicatorExists) {
         previousHeight = await page.evaluate('document.body.scrollHeight');
         await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
         await new Promise(r => setTimeout(r, 2000)); // Adjust this timeout as needed
 
         // Fetch data
-        const newLinksAndBgImages: any = await page.$$eval('a[href^="/reel/"]', links => links.map(a => {
+        const newLinksAndBgImages: any = await page.$$eval('a[href^="/reel/"]', (links, postCount) => links.map((a, index) => {
             const div = a.querySelector('div._aag6');
             const style = div ? div.getAttribute('style') : null;
-            const bgImage = style ? style.match(/url\("(.*)"\)/)?.[1] : null; // Add null check before accessing the array element
+            const bgImage = index < 8 && style ? style.match(/url\("(.*)"\)/)?.[1] : null; // Set bgImage to null after 8 posts
             return {
                 link: a.getAttribute('href'),
                 bgImage
             };
-        }));
+        }), postCount); // Pass postCount as an argument to $$eval
 
-        const uniqueNewLinksAndBgImages = newLinksAndBgImages.filter((newItem:any) => !linksAndBgImages.some(existingItem => existingItem.link === newItem.link));
-        
+        const uniqueNewLinksAndBgImages = newLinksAndBgImages.filter((newItem: any) => !linksAndBgImages.some(existingItem => existingItem.link === newItem.link));
+
         linksAndBgImages = [...linksAndBgImages, ...uniqueNewLinksAndBgImages];
-        
+        postCount += uniqueNewLinksAndBgImages.length; // Update the post count
+
         let newHeight = await page.evaluate('document.body.scrollHeight');
         if (newHeight === previousHeight) {
             loadingIndicatorExists = false;
@@ -63,8 +66,6 @@ export async function reelsScrapper(username: string) {
             }
         }
     }
-
-    console.log(linksAndBgImages.length)
 
     for (let item of linksAndBgImages) {
         if (item.bgImage) {
