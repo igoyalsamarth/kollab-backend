@@ -7,6 +7,20 @@ import axios from 'axios'
 export async function postsScrapper(username: string) {
     puppeteer.use(StealthPlugin());
 
+    function convertKMB(likes: string | null): number | null {
+        if (!likes) { return null }
+        likes = likes.replace(/,/g, ''); // remove commas
+        if (likes.endsWith('B')) {
+            return parseFloat(likes.replace('B', '')) * 1000000000;
+        } else if (likes.endsWith('M')) {
+            return parseFloat(likes.replace('M', '')) * 1000000;
+        } else if (likes.endsWith('K')) {
+            return parseFloat(likes.replace('K', '')) * 1000;
+        } else {
+            return parseFloat(likes);
+        }
+    }
+
     const page = await OpenBrowserAndLogin()
 
     await page.goto(`https://www.instagram.com/${username}/`, { waitUntil: 'networkidle0' });
@@ -77,11 +91,18 @@ export async function postsScrapper(username: string) {
     //console.log(hrefs)
 
     const posts: any = [];
+    let likes;
 
     for (let { link, byteaImage } of linksAndImgSrcs) {
         await page.goto(`https://www.instagram.com${link}`, { waitUntil: 'domcontentloaded' });
-        await page.waitForSelector('span.xdj266r');
-        const likes = await page.$eval('span.xdj266r', span => span.textContent);
+        try {
+            await page.waitForSelector('a span.xdj266r');
+            const likesElement = await page.$('a span.xdj266r');
+            likes = likesElement ? await page.evaluate(el => el.innerText, likesElement) : null;
+        } catch (error) {
+            likes = null;
+        }
+        console.log(likes)
         await page.waitForSelector('time._aaqe');
         const time = await page.$eval('time._aaqe', time => time.getAttribute('datetime'));
         await page.waitForSelector('div.xyinxu5 a');
@@ -111,7 +132,7 @@ export async function postsScrapper(username: string) {
             posts.push({
                 id: postId,
                 byteaImage, // Add the imgSrc to the post object
-                likes: likes ? parseInt(likes.replace(/,/g, '')) : 0,
+                likes: likes ? convertKMB(likes) : null,
                 time: time,
                 brands: brands.length > 0 ? brands : null,
                 locations: locations.length > 0 ? locations : null,
