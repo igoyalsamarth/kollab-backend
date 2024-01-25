@@ -34,6 +34,41 @@ query.post('/new_user', async (req: Request, res: Response) => {
     }
 })
 
+query.get('/get_professionals/:id', async (req: Request, res: Response) => {
+    try {
+        const category = req.params.id;
+        await prisma.$connect();
+        let users;
+        if (category === 'null') {
+            users = await prisma.user.findMany({
+                where: {
+                    accountType: "PROFESSIONAL",
+                    OR: [
+                        { category: "" },
+                        { category: null }
+                    ]
+                }
+            });
+        } else {
+            users = await prisma.user.findMany({
+                where: {
+                    accountType: "PROFESSIONAL",
+                    category: {
+                        equals: category,
+                        mode: "insensitive"
+                    }
+                }
+            });
+        }
+        res.json({ status: 200, data: users })
+    } catch (err) {
+        console.log(err)
+        res.status(500).json({ message: "Internal Server Error" })
+    } finally {
+        await prisma.$disconnect();
+    }
+})
+
 query.get('/get_professionals', async (req: Request, res: Response) => {
     try {
         await prisma.$connect();
@@ -93,7 +128,7 @@ query.get('/get_user/:instaAccount', async (req: Request, res: Response) => {
 
         const numberOfReelsWithBrands = reelsWithBrands.length;
         const numberOfStaticPostsWithBrands = staticPostsWithBrands.length;
-        const brandCollaborations = numberOfReelsWithBrands+numberOfStaticPostsWithBrands
+        const brandCollaborations = numberOfReelsWithBrands + numberOfStaticPostsWithBrands
 
         res.json({ status: 200, data: { user, numberOfReels, numberOfStaticPosts, brandCollaborations } })
     } catch (err) {
@@ -123,7 +158,7 @@ query.get('/get_user_static_posts/:instaAccount', async (req: Request, res: Resp
             },
             take: 6
         });
-        res.json({status: 200, data: latestStaticPosts, likes: averageLikes });
+        res.json({ status: 200, data: latestStaticPosts, likes: averageLikes });
     } catch (err) {
         console.log(err)
         res.status(500).json({ message: "Internal Server Error" })
@@ -155,7 +190,7 @@ query.get('/get_user_reels_posts/:instaAccount', async (req: Request, res: Respo
             },
             take: 8
         });
-        res.json({status: 200, data: latestReels, averages: { views: averageViews, likes: averageLikes, comments: averageComments } });
+        res.json({ status: 200, data: latestReels, averages: { views: averageViews, likes: averageLikes, comments: averageComments } });
     } catch (err) {
         console.log(err)
         res.status(500).json({ message: "Internal Server Error" })
