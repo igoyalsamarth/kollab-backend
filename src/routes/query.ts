@@ -23,7 +23,7 @@ query.post('/new_user', async (req: Request, res: Response) => {
                 link: details.links,
                 category: details.category,
                 claimed: emailId ? true : false,
-                accountType: req.body.accountType,
+                accountType: 'PROFESSIONAL',
             },
         }); res.json({ status: 200, message: "User Created Successfully", data: details })
     } catch (err) {
