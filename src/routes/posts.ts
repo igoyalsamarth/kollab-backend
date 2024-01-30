@@ -10,7 +10,7 @@ posts.post('/populate_static_posts', async (req: Request, res: Response) => {
     try {
         const staticPosts = await postsScrapper(req.body.instaAccount);
         await prisma.$connect();
-        const createPosts = staticPosts.map((post:any) => prisma.staticPostsDetails.create({
+        const createPosts = await Promise.all(staticPosts.map((post:any) => prisma.staticPostsDetails.create({
             data: {
                 id: post.id,
                 instaAccount: req.body.instaAccount,
@@ -21,7 +21,7 @@ posts.post('/populate_static_posts', async (req: Request, res: Response) => {
                 locations: post.locations,
                 audio: post.audio,
             },
-        }));
+        })));
         await prisma.$transaction(createPosts);
         res.json({ status: 200, message: "Static Posts Generated Successfully", data:  staticPosts })
     } catch (err) {
@@ -36,7 +36,7 @@ posts.post('/populate_reels', async (req: Request, res: Response) => {
     try {
         const reelsPosts = await reelsScrapper(req.body.instaAccount);
         await prisma.$connect();
-        const createReels = reelsPosts.map((post:any) => prisma.reelPostsDetails.create({
+        const createReels:any[] = await Promise.all( reelsPosts.map((post:any) => prisma.reelPostsDetails.create({
             data: {
                 id: post.id,
                 instaAccount: req.body.instaAccount,
@@ -49,7 +49,7 @@ posts.post('/populate_reels', async (req: Request, res: Response) => {
                 locations: post.locations,
                 audio: post.audio,
             },
-        }));
+        })));
         await prisma.$transaction(createReels);
         res.json({ status: 200, message: "Reels Generated Successfully", data: reelsPosts })
     } catch (err) {

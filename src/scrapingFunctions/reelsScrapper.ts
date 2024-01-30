@@ -32,13 +32,13 @@ export async function reelsScrapper(username: string) {
 
     let postCount = 0;
 
-    while (loadingIndicatorExists) {
+    while (loadingIndicatorExists && postCount < 8) {
         previousHeight = await page.evaluate('document.body.scrollHeight');
         await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
         await new Promise(r => setTimeout(r, 2000)); // Adjust this timeout as needed
 
         // Fetch data
-        const newLinksAndBgImages: any = await page.$$eval('a[href^="/reel/"]', (links, postCount) => links.map((a, index) => {
+        const newLinksAndBgImages: any = await page.$$eval('a[href^="/reel/"]', (links) => links.map((a, index) => {
             const div = a.querySelector('div._aag6');
             const style = div ? div.getAttribute('style') : null;
             const bgImage = index < 9 && style ? style.match(/url\("(.*)"\)/)?.[1] : null; // Set bgImage to null after 8 posts
@@ -46,12 +46,17 @@ export async function reelsScrapper(username: string) {
                 link: a.getAttribute('href'),
                 bgImage
             };
-        }), postCount); // Pass postCount as an argument to $$eval
+        }));
 
-        const uniqueNewLinksAndBgImages = newLinksAndBgImages.filter((newItem: any) => !linksAndBgImages.some(existingItem => existingItem.link === newItem.link));
+        const uniqueNewLinksAndBgImages = newLinksAndBgImages.filter((newItem: any) => {
+            const isUnique = !linksAndBgImages.some(existingItem => existingItem.link === newItem.link);
+            if (isUnique) {
+                postCount++; // Increment the post count only when a new reel is added
+            }
+            return isUnique;
+        });
 
         linksAndBgImages = [...linksAndBgImages, ...uniqueNewLinksAndBgImages];
-        postCount += uniqueNewLinksAndBgImages.length; // Update the post count
 
         let newHeight = await page.evaluate('document.body.scrollHeight');
         if (newHeight === previousHeight) {

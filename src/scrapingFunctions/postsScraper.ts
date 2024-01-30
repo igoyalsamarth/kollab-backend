@@ -31,30 +31,32 @@ export async function postsScrapper(username: string) {
 
     let postCount = 0;
 
-    while (loadingIndicatorExists) {
+    while (loadingIndicatorExists && postCount < 6) {
         previousHeight = await page.evaluate('document.body.scrollHeight');
         await page.evaluate('window.scrollTo(0, document.body.scrollHeight)');
         await new Promise(r => setTimeout(r, 5000)); // Adjust this timeout as needed
 
         // Fetch data
-        const newLinksAndImgSrcs: any = await page.$$eval('a[href^="/p/"]', (links, postCount) => {
+        const newLinksAndImgSrcs: any = await page.$$eval('a[href^="/p/"]', (links) => {
             return links.map((a) => {
                 const img = a.querySelector('img');
-                const imgSrc = postCount < 7 && img ? img.getAttribute('src') : null; // Set imgSrc to null after 6 posts
-                postCount++; // Increment the post count
+                const imgSrc = img ? img.getAttribute('src') : null; // Set imgSrc to null after 6 posts
                 return {
                     link: a.getAttribute('href'),
                     imgSrc
                 };
             });
-        }, postCount); // Pass postCount as an argument to $$eval
+        });
 
-        const uniqueNewLinksAndImgSrcs = newLinksAndImgSrcs.filter((newItem: any) =>
-            !linksAndImgSrcs.some((existingItem: any) => existingItem.link === newItem.link)
-        );
+        const uniqueNewLinksAndImgSrcs = newLinksAndImgSrcs.filter((newItem: any) => {
+            const isUnique = !linksAndImgSrcs.some((existingItem: any) => existingItem.link === newItem.link);
+            if (isUnique) {
+                postCount++; // Increment the post count only when a new post is added
+            }
+            return isUnique;
+        });
 
         linksAndImgSrcs = [...linksAndImgSrcs, ...uniqueNewLinksAndImgSrcs];
-        postCount += uniqueNewLinksAndImgSrcs.length; // Update the post count
 
         let newHeight = await page.evaluate('document.body.scrollHeight');
         if (newHeight === previousHeight) {
@@ -93,8 +95,10 @@ export async function postsScrapper(username: string) {
     const posts: any = [];
     let likes;
 
+
     for (let { link, byteaImage } of linksAndImgSrcs) {
         await page.goto(`https://www.instagram.com${link}`, { waitUntil: 'domcontentloaded' });
+
         try {
             await page.waitForSelector('a span.xdj266r');
             const likesElement = await page.$('a span.xdj266r');
