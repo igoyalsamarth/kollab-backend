@@ -1,7 +1,6 @@
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { OpenBrowserAndLogin } from "../helpers/openBrowserAndLogin";
-import { scrollToTheEnd } from "./scrollToTheEnd";
 import axios from 'axios'
 
 export async function postsScrapper(username: string) {
@@ -50,10 +49,11 @@ export async function postsScrapper(username: string) {
 
         const uniqueNewLinksAndImgSrcs = newLinksAndImgSrcs.filter((newItem: any) => {
             const isUnique = !linksAndImgSrcs.some((existingItem: any) => existingItem.link === newItem.link);
-            if (isUnique) {
+            if (isUnique && postCount < 6) {
                 postCount++; // Increment the post count only when a new post is added
+                return true;
             }
-            return isUnique;
+            return false;
         });
 
         linksAndImgSrcs = [...linksAndImgSrcs, ...uniqueNewLinksAndImgSrcs];
@@ -78,20 +78,6 @@ export async function postsScrapper(username: string) {
         }
     }
 
-    //console.log(links)
-
-    //await page.goto(`https://www.instagram.com/p/C0lNjDjB0bB/`, { waitUntil: 'networkidle0' });
-
-    //const likes = await page.$eval('span.xdj266r', span => span.textContent);
-
-    //const time = await page.$eval('time._aaqe', time => time.getAttribute('datetime'));
-
-    //const hrefs = await page.$$eval('div.xyinxu5 a', (links, username) => links.map((a:any) => a.getAttribute('href').trim().replace(/^\/|\/$/g, '')).filter((href: string) => href !== username), username);
-
-    //console.log(likes)
-    //console.log(time)
-    //console.log(hrefs)
-
     const posts: any = [];
     let likes;
 
@@ -106,7 +92,6 @@ export async function postsScrapper(username: string) {
         } catch (error) {
             likes = null;
         }
-        console.log(likes)
         await page.waitForSelector('time._aaqe');
         const time = await page.$eval('time._aaqe', time => time.getAttribute('datetime'));
         await page.waitForSelector('div.xyinxu5 a');

@@ -41,7 +41,7 @@ export async function reelsScrapper(username: string) {
         const newLinksAndBgImages: any = await page.$$eval('a[href^="/reel/"]', (links) => links.map((a, index) => {
             const div = a.querySelector('div._aag6');
             const style = div ? div.getAttribute('style') : null;
-            const bgImage = index < 9 && style ? style.match(/url\("(.*)"\)/)?.[1] : null; // Set bgImage to null after 8 posts
+            const bgImage = style ? style.match(/url\("(.*)"\)/)?.[1] : null; // Set bgImage to null after 8 posts
             return {
                 link: a.getAttribute('href'),
                 bgImage
@@ -50,10 +50,11 @@ export async function reelsScrapper(username: string) {
 
         const uniqueNewLinksAndBgImages = newLinksAndBgImages.filter((newItem: any) => {
             const isUnique = !linksAndBgImages.some(existingItem => existingItem.link === newItem.link);
-            if (isUnique) {
+            if (isUnique && postCount < 8) {
                 postCount++; // Increment the post count only when a new reel is added
+                return true;
             }
-            return isUnique;
+            return false;
         });
 
         linksAndBgImages = [...linksAndBgImages, ...uniqueNewLinksAndBgImages];
@@ -61,13 +62,11 @@ export async function reelsScrapper(username: string) {
         let newHeight = await page.evaluate('document.body.scrollHeight');
         if (newHeight === previousHeight) {
             loadingIndicatorExists = false;
-            console.log('Reached the end of the page');
         } else {
             try {
                 await page.waitForFunction(`document.body.scrollHeight > ${previousHeight}`, { timeout: 5000 });
             } catch (error) {
                 loadingIndicatorExists = false;
-                console.log('Scroll height did not increase within 5 seconds');
             }
         }
     }
