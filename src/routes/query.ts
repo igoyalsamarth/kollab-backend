@@ -54,7 +54,7 @@ query.get('/get_professionals/:id', async (req: Request, res: Response) => {
                 where: {
                     accountType: "PROFESSIONAL",
                     category: {
-                        equals: category,
+                        equals: category.replace(/-/g, '/'),
                         mode: "insensitive"
                     }
                 }
